@@ -1,0 +1,10 @@
+cc_library_headers {
+    name: "libmtkcam3_hal_device_tinymw_headers",
+    proprietary: true,
+    vendor: true,
+    owner: "mtk",
+
+    export_include_dirs: [
+        "include",
+    ],
+}

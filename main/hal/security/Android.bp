@@ -1,0 +1,61 @@
+// securecameratest static library for testing
+
+cc_library_static {
+    name: "libsecurecameratest_legacy",
+    proprietary: true,
+    owner: "mtk",
+    defaults: ["mtk_libsecurecameratest_legacy_defaults"],
+
+    srcs: [
+        "utils/TestBase.cpp",
+        "camera/ACameraHelper.cpp",
+        "camera/ACameraMetadataCache.cpp",
+        "media/AImageReaderHelper.cpp",
+        "graphics/AllocatorHelper.cpp",
+        "graphics/MapperHelper.cpp",
+    ],
+
+    header_libs: [
+        "libnativewindow_headers",
+        "media_ndk_headers",
+        "libmtkcam_headers",
+        "libgz_uree_headers",
+        "libgralloc_extra_headers",
+        "libgralloc_metadata_headers",
+    ],
+
+    static_libs: [
+        "libarect",
+        // build against the gtest library
+        "libgtest",
+        "android.hardware.graphics.common@1.2",
+        "android.hardware.graphics.allocator@4.0",
+        "android.hardware.graphics.mapper@4.0",
+    ],
+
+    shared_libs: [
+        "libsync",
+        "libcamera2ndk_vendor",
+        "libdmabufheap"
+    ],
+
+    cflags: [
+        "-D__ANDROID_VNDK__",
+        "-Werror",
+    ],
+}
+
+mtk_libsecurecameratest_legacy_defaults {
+    name: "mtk_libsecurecameratest_legacy_defaults",
+}
+
+bootstrap_go_package {
+    name: "soong-securecamera-legacy-mediatek",
+    pkgPath: "android/soong/securecamera_legacy/mediatek",
+    deps: [
+        "soong-android",
+        "soong-cc",
+    ],
+    srcs: ["securecamera.go"],
+    pluginFor: ["soong_build"],
+}

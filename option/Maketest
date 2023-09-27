@@ -1,0 +1,170 @@
+TEST_CASE := face 3rdparty swnr bss cnr mstream streaming lpcnr msnr cpu ccap hwmargin cap ainr depth mfnr
+.PHONY: all $(TEST_CASE)
+all: $(TEST_CASE)
+
+USAGE := "make -f Maketest"
+DEBUG :=
+
+TEST_TARGET := kiboplus mt3886 mt3967 mt6739 mt6757 mt6758 mt6759 mt6761 mt6763 mt6765 mt6768 mt6771 mt6775 mt6779 mt6785 mt6797 mt6799 mt6853 mt6873 mt6885
+
+define sim =
+  $(eval MTK_PLATFORM := $1)
+  $(eval PLATFORM := $1)
+  $(eval TARGET_BOARD_PLATFORM := $1)
+  $(eval include $($2))
+  $(info $($3))
+  $(call clear)
+  $(if $(DEBUG),$(info t=$1 mk=$2/$($2) info=$3/$($3)))
+endef
+
+define clear =
+  $(eval LOCAL_CFLAGS := )
+  $(eval LOCAL_WHOLE_STATIC_LIBRARIES := )
+  $(eval LOCAL_SRC_FILES := )
+  $(eval LOCAL_SHARED_LIBRARIES := )
+  $(eval MTKCAM_OPT_FDFT_DIR := )
+  $(eval MTKCAM_OPT_FDVER := )
+  $(eval MTKCAM_OPT_FDFT_USE_HW := )
+  $(eval MTKCAM_OPT_FDFT_SUB_VERSION := )
+  $(eval MTKCAM_OPT_ISP_VER := )
+  $(eval MTKCAM_OPT_SWNR := )
+  $(eval MTKCAM_OPT_MSNR := )
+  $(eval MTKCAM_OPT_AINR_VERSION := )
+  $(eval MTKCAM_OPT_MFLL_MF_TAG_VERSION := )
+  $(eval MTKCAM_OPT_MFLL_APPLY_RAW_BSS := )
+  $(eval MTKCAM_OPT_MAPPING_MGR := )
+  $(eval MTKCAM_OPT_CNR_MAPPING_MGR := )
+  $(eval MTKCAM_OPT_MSTREAM := )
+  $(eval MTKCAM_OPT_STAGGER := )
+  $(eval MTKCAM_OPT_CAPTURE_ISP_VERSION := )
+  $(eval MTKCAM_OPT_RAW_FORMAT_UTILITY := )
+  $(eval MTKCAM_OPT_CAP_MFLL_APPLY_RAW_BSS := )
+  $(eval MTKCAM_OPT_AINR := )
+  $(eval MTKCAM_OPT_PQ_SIZE := )
+  $(eval MTKCAM_OPT_CAP_DSDN20 := )
+  $(eval MTKCAM_OPT_DCE_HFG := )
+  $(eval MTKCAM_OPT_MDPQOS := )
+  $(eval MTKCAM_OPT_P2_AND_DEPTH := )
+  $(eval MTKCAM_OPT_DSDN20 := )
+  $(eval MTKCAM_OPT_DSDN25 := )
+  $(eval MTKCAM_OPT_VER4_PLATFORMS := )
+  $(eval MTKCAM_OPT_VER4_5_PLATFORMS := )
+  $(eval MTKCAM_OPT_LPCNR_VER := )
+  $(eval MTKCAM_OPT_MSNR_VER := )
+  $(eval MTKCAM_OPT_CAM_DEV_TIMEOUT := )
+  $(eval MTKCAM_OPT_CCAP_HIDL := )
+  $(eval MTKCAM_OPT_P1_HW_MARGIN := )
+endef
+
+FACE_MK := ../feature/common/faceeffect/facefeature.mk
+FACE_INFO = plat=$(PLATFORM) dir=$(FDFT_DIR) hw=$(FDFT_USE_HW) ver=$(FDVER) sub=$(FDFT_SUB_VERSION)
+
+3rdparty_MK := ../3rdparty/mtk/Android.mk
+3rdparty_INFO = plat=$(PLATFORM) LOCAL_CFLAGS=$(LOCAL_CFLAGS) LIBRARY=$(LOCAL_WHOLE_STATIC_LIBRARIES)
+
+SWNR_MK := ../3rdparty/mtk/swnr/Android.mk
+SWNR_INFO = plat=$(PLATFORM) LOCAL_SRC_FILES=$(LOCAL_SRC_FILES)
+
+BSS_MK := ../feature/bsscore/Android.mk
+BSS_INFO = plat=$(PLATFORM) MFLL_MF_TAG_VERSION=$(MFLL_MF_TAG_VERSION) BSSCORE_MODULE_VERSION=$(BSSCORE_MODULE_VERSION) MFLL_APPLY_RAW_BSS=$(MFLL_APPLY_RAW_BSS) BSSCORE_SHARED_LIBS=$(BSSCORE_SHARED_LIBS)
+
+CNR_MK := ../feature/chromaNR/Android.mk
+CNR_INFO = plat=$(PLATFORM) CNR_SHARED_LIBS=$(CNR_SHARED_LIBS)
+
+MSTREAM_MK := ../feature/common/utils/Android.mk
+MSTREAM_INFO = plat=$(PLATFORM) LOCAL_CFLAGS=$(LOCAL_CFLAGS)
+
+STREAMING_MK := ../feature/core/featurePipe/streaming/Android.mk
+STREAMING_INFO = plat=$(PLATFORM) LOCAL_CFLAGS=$(LOCAL_CFLAGS)
+
+LPCNR_MK := ../feature/lpcnr/Android.mk
+LPCNR_INFO = plat=$(PLATFORM) LPCNR_PLATFORM=$(LPCNR_PLATFORM) LPCNR_MODULE_VERSION=$(LPCNR_MODULE_VERSION)
+
+MSNR_MK := ../feature/msnr/Android.mk
+MSNR_INFO = plat=$(PLATFORM) MSNR_MODULE_VERSION=$(MSNR_MODULE_VERSION)
+
+CPU_MK := ../main/hal/device_org/3.x/device/Android.mk
+CPU_INFO = plat=$(PLATFORM) LOCAL_CFLAGS=$(LOCAL_CFLAGS)
+
+CCAP_MK := ../main/hal/service/Android.mk
+CCAP_INFO = plat=$(PLATFORM) LOCAL_CFLAGS=$(LOCAL_CFLAGS) LOCAL_SHARED_LIBRARIES=$(LOCAL_SHARED_LIBRARIES)
+
+HWMARGIN_MK := ../pipeline/policy/Android.mk
+HWMARGIN_INFO = plat=$(PLATFORM) P1_HW_MARGIN=$(P1_HW_MARGIN)
+
+CAP_MK := ../feature/core/featurePipe/capture/Android.mk
+CAP_INFO = plat=$(PLATFORM) LOCAL_SRC_FILES=$(LOCAL_SRC_FILES) MTK_CAPTURE_ISP_VERSION=$(MTK_CAPTURE_ISP_VERSION) P2_RAW_FORMAT_UTILITY=$(P2_RAW_FORMAT_UTILITY) MFLL_MF_TAG_VERSION=$(MFLL_MF_TAG_VERSION) MFLL_APPLY_RAW_BSS=$(MFLL_APPLY_RAW_BSS) SUPPORT_SWNR=$(SUPPORT_SWNR) SUPPORT_PQ_SIZE=$(SUPPORT_PQ_SIZE) LOCAL_CFLAGS=$(LOCAL_CFLAGS)
+
+AINR_MK := ../feature/ainr/Android.mk
+AINR_INFO = plat=$(PLATFORM) AINR_PLATFORM=$(AINR_PLATFORM) AINR_ALGO_FEATURE_DECOUPLING=$(AINR_ALGO_FEATURE_DECOUPLING) AINR_MF_TAG_VERSION=$(AINR_MF_TAG_VERSION) AINR_MF_TAG_SUBVERSION=$(AINR_MF_TAG_SUBVERSION) AINR_CORE_VERSION_MAJOR=$(AINR_CORE_VERSION_MAJOR) AINR_CORE_VERSION_MINOR=$(AINR_CORE_VERSION_MINOR)  AINR_MODULE_VERSION_EXIFINFO=$( AINR_MODULE_VERSION_EXIFINFO) AINR_MODULE_VERSION_NVRAM=$(AINR_MODULE_VERSION_NVRAM) AINR_MODULE_VERSION_STRATEGY=$(AINR_MODULE_VERSION_STRATEGY) AINR_MODULE_VERSION_FEFM=$(AINR_MODULE_VERSION_FEFM) AINR_MODULE_VERSION_WPE=$(AINR_MODULE_VERSION_WPE) AINR_MODULE_VERSION_AIALGO=$(AINR_MODULE_VERSION_AIALGO) AINR_MODULE_VERSION_BUFPOOL=$(AINR_MODULE_VERSION_BUFPOOL) AINR_MC_THREAD_NUM=$(AINR_MC_THREAD_NUM) AINR_USING_IMAGEBUFFER_QUEUE=$(AINR_USING_IMAGEBUFFER_QUEUE) AINR_NVRAM_3A_TUNING_COUPLING=$(AINR_NVRAM_3A_TUNING_COUPLING)
+
+DEPTH_MK := ../feature/core/featurePipe/vsdof/depthmap/Android.mk
+DEPTH_INFO = plat=$(PLATFORM) DEPTHMAP_VER=$(DEPTHMAP_VER)
+
+MFNR_MK := ../feature/mfnr/Android.mk
+MFNR_INFO = plat=$(PLATFORM) MFLL_PLATFORM=$(MFLL_PLATFORM) MFLL_ALGO_FEATURE_DECOUPLING=$(MFLL_ALGO_FEATURE_DECOUPLING) MFLL_MF_TAG_VERSION=$(MFLL_MF_TAG_VERSION) MFLL_MF_TAG_SUBVERSION=$(MFLL_MF_TAG_SUBVERSION) MFLL_CORE_VERSION_MAJOR=$(MFLL_CORE_VERSION_MAJOR) MFLL_CORE_VERSION_MINOR=$(MFLL_CORE_VERSION_MINOR) MFLL_MODULE_VERSION_BSS=$(MFLL_MODULE_VERSION_BSS) MFLL_MODULE_VERSION_CAPTURER=$(MFLL_MODULE_VERSION_CAPTURER) MFLL_MODULE_VERSION_EXIFINFO=$(MFLL_MODULE_VERSION_EXIFINFO) MFLL_MODULE_VERSION_PERFSERV=$(MFLL_MODULE_VERSION_PERFSERV) MFLL_MODULE_VERSION_IMAGEBUF=$(MFLL_MODULE_VERSION_IMAGEBUF) MFLL_MODULE_VERSION_MEMC=$(MFLL_MODULE_VERSION_MEMC) MFLL_MODULE_VERSION_MFB=$(MFLL_MODULE_VERSION_MFB) MFLL_MODULE_VERSION_NVRAM=$(MFLL_MODULE_VERSION_NVRAM) MFLL_MODULE_VERSION_STRATEGY=$(MFLL_MODULE_VERSION_STRATEGY) MFLL_MC_THREAD_NUM=$(MFLL_MC_THREAD_NUM) MFLL_USING_IMAGEBUFFER_QUEUE=$(MFLL_USING_IMAGEBUFFER_QUEUE) MFLL_NVRAM_3A_TUNING_COUPLING=$(MFLL_NVRAM_3A_TUNING_COUPLING) MFLL_OMCMFB_P2_DIRECT_LINK=$(MFLL_OMCMFB_P2_DIRECT_LINK) MFLL_PYRAMID_SIZE=$(MFLL_PYRAMID_SIZE) MFLL_MODULE_VERSION_PERFSERV=$(MFLL_MODULE_VERSION_PERFSERV)
+
+
+face:
+	$(info simulate(face): mk=$(FACE_MK))
+	$(foreach t,$(TEST_TARGET),$(eval $(call sim,$(t),FACE_MK,FACE_INFO)))
+
+3rdparty:
+	$(info simulate(3rdparty_MTK): mk=$(3rdparty_MK))
+	$(foreach t,$(TEST_TARGET),$(eval $(call sim,$(t),3rdparty_MK,3rdparty_INFO)))
+
+swnr:
+	$(info simulate(swnr): mk=$(SWNR_MK))
+	$(foreach t,$(TEST_TARGET),$(eval $(call sim,$(t),SWNR_MK,SWNR_INFO)))
+
+bss:
+	$(info simulate(bsscore): mk=$(BSS_MK))
+	$(foreach t,$(TEST_TARGET),$(eval $(call sim,$(t),BSS_MK,BSS_INFO)))
+
+cnr:
+	$(info simulate(cnr): mk=$(CNR_MK))
+	$(foreach t,$(TEST_TARGET),$(eval $(call sim,$(t),CNR_MK,CNR_INFO)))
+
+mstream:
+	$(info simulate(mstream): mk=$(MSTREAM_MK))
+	$(foreach t,$(TEST_TARGET),$(eval $(call sim,$(t),MSTREAM_MK,MSTREAM_INFO)))
+
+streaming:
+	$(info simulate(streaming): mk=$(STREAMING_MK))
+	$(foreach t,$(TEST_TARGET),$(eval $(call sim,$(t),STREAMING_MK,STREAMING_INFO)))
+
+lpcnr:
+	$(info simulate(lpcnr): mk=$(LPCNR_MK))
+	$(foreach t,$(TEST_TARGET),$(eval $(call sim,$(t),LPCNR_MK,LPCNR_INFO)))
+
+msnr:
+	$(info simulate(msnr): mk=$(MSNR_MK))
+	$(foreach t,$(TEST_TARGET),$(eval $(call sim,$(t),MSNR_MK,MSNR_INFO)))
+
+cpu:
+	$(info simulate(cpu): mk=$(CPU_MK))
+	$(foreach t,$(TEST_TARGET),$(eval $(call sim,$(t),CPU_MK,CPU_INFO)))
+
+ccap:
+	$(info simulate(ccap): mk=$(CCAP_MK))
+	$(foreach t,$(TEST_TARGET),$(eval $(call sim,$(t),CCAP_MK,CCAP_INFO)))
+
+hwmargin:
+	$(info simulate(hwmargin): mk=$(HWMARGIN_MK))
+	$(foreach t,$(TEST_TARGET),$(eval $(call sim,$(t),HWMARGIN_MK,HWMARGIN_INFO)))
+
+cap:
+	$(info simulate(cap): mk=$(CAP_MK))
+	$(foreach t,$(TEST_TARGET),$(eval $(call sim,$(t),CAP_MK,CAP_INFO)))
+
+ainr:
+	$(info simulate(ainr): mk=$(AINR_MK))
+	$(foreach t,$(TEST_TARGET),$(eval $(call sim,$(t),AINR_MK,AINR_INFO)))
+
+depth:
+	$(info simulate(depth): mk=$(DEPTH_MK))
+	$(foreach t,$(TEST_TARGET),$(eval $(call sim,$(t),DEPTH_MK,DEPTH_INFO)))
+
+mfnr:
+	$(info simulate(mfnr): mk=$(MFNR_MK))
+	$(foreach t,$(TEST_TARGET),$(eval $(call sim,$(t),MFNR_MK,MFNR_INFO)))

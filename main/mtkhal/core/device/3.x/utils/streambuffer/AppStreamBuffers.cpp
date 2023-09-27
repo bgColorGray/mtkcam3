@@ -1,0 +1,561 @@
+/* Copyright Statement:
+ *
+ * This software/firmware and related documentation ("MediaTek Software") are
+ * protected under relevant copyright laws. The information contained herein is
+ * confidential and proprietary to MediaTek Inc. and/or its licensors. Without
+ * the prior written permission of MediaTek inc. and/or its licensors, any
+ * reproduction, modification, use or disclosure of MediaTek Software, and
+ * information contained herein, in whole or in part, shall be strictly
+ * prohibited.
+ *
+ * MediaTek Inc. (C) 2010. All rights reserved.
+ *
+ * BY OPENING THIS FILE, RECEIVER HEREBY UNEQUIVOCALLY ACKNOWLEDGES AND AGREES
+ * THAT THE SOFTWARE/FIRMWARE AND ITS DOCUMENTATIONS ("MEDIATEK SOFTWARE")
+ * RECEIVED FROM MEDIATEK AND/OR ITS REPRESENTATIVES ARE PROVIDED TO RECEIVER
+ * ON AN "AS-IS" BASIS ONLY. MEDIATEK EXPRESSLY DISCLAIMS ANY AND ALL
+ * WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE OR
+ * NONINFRINGEMENT. NEITHER DOES MEDIATEK PROVIDE ANY WARRANTY WHATSOEVER WITH
+ * RESPECT TO THE SOFTWARE OF ANY THIRD PARTY WHICH MAY BE USED BY,
+ * INCORPORATED IN, OR SUPPLIED WITH THE MEDIATEK SOFTWARE, AND RECEIVER AGREES
+ * TO LOOK ONLY TO SUCH THIRD PARTY FOR ANY WARRANTY CLAIM RELATING THERETO.
+ * RECEIVER EXPRESSLY ACKNOWLEDGES THAT IT IS RECEIVER'S SOLE RESPONSIBILITY TO
+ * OBTAIN FROM ANY THIRD PARTY ALL PROPER LICENSES CONTAINED IN MEDIATEK
+ * SOFTWARE. MEDIATEK SHALL ALSO NOT BE RESPONSIBLE FOR ANY MEDIATEK SOFTWARE
+ * RELEASES MADE TO RECEIVER'S SPECIFICATION OR TO CONFORM TO A PARTICULAR
+ * STANDARD OR OPEN FORUM. RECEIVER'S SOLE AND EXCLUSIVE REMEDY AND MEDIATEK'S
+ * ENTIRE AND CUMULATIVE LIABILITY WITH RESPECT TO THE MEDIATEK SOFTWARE
+ * RELEASED HEREUNDER WILL BE, AT MEDIATEK'S OPTION, TO REVISE OR REPLACE THE
+ * MEDIATEK SOFTWARE AT ISSUE, OR REFUND ANY SOFTWARE LICENSE FEES OR SERVICE
+ * CHARGE PAID BY RECEIVER TO MEDIATEK FOR SUCH MEDIATEK SOFTWARE AT ISSUE.
+ *
+ * The following software/firmware and/or related documentation ("MediaTek
+ * Software") have been modified by MediaTek Inc. All revisions are subject to
+ * any receiver's applicable license agreements with MediaTek Inc.
+ */
+
+#include <mtkcam3/main/mtkhal/core/device/3.x/utils/streambuffer/AppStreamBuffers.h>
+//#include <mtkcam-interfaces/pipeline/utils/stream/Factory.h>
+
+#include <iomanip>
+#include <sstream>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "MyUtils.h"
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+CAM_ULOG_DECLARE_MODULE_ID(MOD_CAMERA_DEVICE);
+#define MY_LOGV(fmt, arg...) CAM_ULOGMV("[%s] " fmt, __FUNCTION__, ##arg)
+#define MY_LOGD(fmt, arg...) CAM_ULOGMD("[%s] " fmt, __FUNCTION__, ##arg)
+#define MY_LOGI(fmt, arg...) CAM_ULOGMI("[%s] " fmt, __FUNCTION__, ##arg)
+#define MY_LOGW(fmt, arg...) CAM_ULOGMW("[%s] " fmt, __FUNCTION__, ##arg)
+#define MY_LOGE(fmt, arg...) CAM_ULOGME("[%s] " fmt, __FUNCTION__, ##arg)
+#define MY_LOGA(fmt, arg...) \
+                    CAM_ULOGM_ASSERT(0, "[%s] " fmt, __FUNCTION__, ##arg)
+#define MY_LOGF(fmt, arg...) CAM_ULOGM_FATAL("[%s] " fmt, __FUNCTION__, ##arg)
+//
+#define MY_LOGV_IF(cond, ...) \
+  do {                        \
+    if ((cond)) {             \
+      MY_LOGV(__VA_ARGS__);   \
+    }                         \
+  } while (0)
+#define MY_LOGD_IF(cond, ...) \
+  do {                        \
+    if ((cond)) {             \
+      MY_LOGD(__VA_ARGS__);   \
+    }                         \
+  } while (0)
+#define MY_LOGI_IF(cond, ...) \
+  do {                        \
+    if ((cond)) {             \
+      MY_LOGI(__VA_ARGS__);   \
+    }                         \
+  } while (0)
+#define MY_LOGW_IF(cond, ...) \
+  do {                        \
+    if ((cond)) {             \
+      MY_LOGW(__VA_ARGS__);   \
+    }                         \
+  } while (0)
+#define MY_LOGE_IF(cond, ...) \
+  do {                        \
+    if ((cond)) {             \
+      MY_LOGE(__VA_ARGS__);   \
+    }                         \
+  } while (0)
+#define MY_LOGA_IF(cond, ...) \
+  do {                        \
+    if ((cond)) {             \
+      MY_LOGA(__VA_ARGS__);   \
+    }                         \
+  } while (0)
+#define MY_LOGF_IF(cond, ...) \
+  do {                        \
+    if ((cond)) {             \
+      MY_LOGF(__VA_ARGS__);   \
+    }                         \
+  } while (0)
+
+using NSCam::v3::STREAM_BUFFER_STATUS;
+using android::sp;
+namespace mcam {
+namespace core {
+namespace Utils {
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+AppImageStreamBuffer::
+Allocator::
+Allocator(
+    IStreamInfoT* pStreamInfo
+)
+    : mpStreamInfo(pStreamInfo)
+{
+}
+
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+AppImageStreamBuffer::StreamBufferT*
+AppImageStreamBuffer::
+Allocator::
+operator()(
+    MUINT64 bufferId,
+    std::shared_ptr<mcam::IImageBufferHeap> pMcamHeap,
+    NSCam::IImageBufferHeap* pHeap,
+    IStreamInfoT* pStreamInfo)
+{
+    if  ( pHeap == 0 ) {
+        MY_LOGE(
+            "NULL IGraphicImageBufferHeap: %s",
+            mpStreamInfo->getStreamName()
+        );
+        return nullptr;
+    }
+    //
+    if  ( bufferId == 0 ) {
+        MY_LOGE("bufferId cannot be 0");
+        return nullptr;
+    }
+    //
+    return new StreamBufferT(
+        bufferId,
+        pStreamInfo ? pStreamInfo : mpStreamInfo,
+        pMcamHeap,
+        pHeap
+    );
+}
+
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+AppImageStreamBuffer::
+AppImageStreamBuffer(
+    MUINT64 bufferId,
+    sp<IStreamInfoT> pStreamInfo,
+    std::shared_ptr<mcam::IImageBufferHeap> pMcamHeap,
+    sp<NSCam::IImageBufferHeap> pImageBufferHeap
+)
+    : TStreamBufferT(pStreamInfo, pImageBufferHeap.get())
+    , mBufferId(bufferId)
+    , mMcamImageBufferHeap(pMcamHeap)
+    , mImageBufferHeap(pImageBufferHeap)
+    //
+{
+    if (pImageBufferHeap != nullptr)
+    {
+        mAcquireFence = pImageBufferHeap->getAcquireFence();
+    }
+    else
+    {
+        mAcquireFence = -1;
+    }
+    MY_LOGD_IF(0, "acquire fence : %d", mAcquireFence);
+}
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+AppImageStreamBuffer::
+~AppImageStreamBuffer()
+{
+    if (mAcquireFence != -1)
+    {
+        MY_LOGD_IF(0, "close acquire fence : %d", mAcquireFence);
+        ::close(mAcquireFence);
+        mAcquireFence = -1;
+    }
+    mImageBufferHeap = nullptr;
+    mMcamImageBufferHeap = nullptr;
+
+}
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+MUINT64
+AppImageStreamBuffer::
+getBufferId() const
+{
+    return mBufferId;
+}
+
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+sp<NSCam::IImageBufferHeap>
+AppImageStreamBuffer::
+getImageBufferHeap() const
+{
+    Mutex::Autolock _l(mBufMutex);
+    //
+    return mImageBufferHeap;
+}
+
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+MINT
+AppImageStreamBuffer::
+getAcquireFence()   const
+{
+    Mutex::Autolock _l(mBufMutex);
+    //
+    return mImageBufferHeap->getAcquireFence();
+}
+
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+MVOID
+AppImageStreamBuffer::
+setAcquireFence(MINT fence)
+{
+    Mutex::Autolock _l(mBufMutex);
+    //
+    mImageBufferHeap->setAcquireFence(fence);
+    mMcamImageBufferHeap->setAcquireFence(fence);
+}
+
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+MINT
+AppImageStreamBuffer::
+getReleaseFence()   const
+{
+    Mutex::Autolock _l(mBufMutex);
+    //
+    return mImageBufferHeap->getReleaseFence();
+}
+
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+MVOID
+AppImageStreamBuffer::
+setReleaseFence(MINT fence)
+{
+    Mutex::Autolock _l(mBufMutex);
+    //
+    mImageBufferHeap->setReleaseFence(fence);
+    mMcamImageBufferHeap->setReleaseFence(fence);
+}
+
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+MVOID
+AppImageStreamBuffer::
+replaceStreamInfo(android::sp<IStreamInfoT> pNewStreamInfo)
+{
+    Mutex::Autolock _l(mBufMutex);
+    MY_LOGD_IF(0, "\"%s\" -> \"%s\"", mStreamInfo->toString().c_str(), pNewStreamInfo->toString().c_str());
+    mStreamInfo = pNewStreamInfo;
+}
+
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+ssize_t
+AppImageStreamBuffer::
+enqueUserGraph(
+    android::sp<IUserGraph> pUserGraph
+)
+{
+    ssize_t const groupIndex = mUsersManager->enqueUserGraph(pUserGraph);
+    if  ( 0 != groupIndex ) {
+        return groupIndex;
+    }
+    //
+    MBOOL found = MFALSE;
+    sp<IUserGraph> const& pMyUserGraph = pUserGraph;
+    for (size_t i = 0; i < pMyUserGraph->size(); i++) {
+        if ( IUsersManager::Category::NONE == pMyUserGraph->getCategory(i) )
+            continue;
+        MY_LOGD_IF(0, "Node:%zu is a (%d: producer or consumer)!", i, pMyUserGraph->getCategory(i));
+        //
+        NSCam::MERROR err = android::OK;
+        if  ( ! found ) {
+            found = MTRUE;
+            MINT fence = ::dup(getAcquireFence());
+            MY_LOGD_IF(0, "0-indegree user:%zu streamid(%#" PRIx64 ") acquire fence:%d, set dup fence:%d", i, this->getStreamInfo()->getStreamId(), getAcquireFence(), fence);
+            err = pMyUserGraph->setAcquireFence(i, fence);
+        }
+        else {
+            MINT fence = ::dup(getAcquireFence());
+            MY_LOGW("another 0-indegree user:%zu; need dup acquire fence:%d->%d", i, getAcquireFence(), fence);
+            err = pMyUserGraph->setAcquireFence(i, fence);
+        }
+        //
+        if  ( android::OK != err ) {
+            MY_LOGE("Fail to setAcquireFence(%zu, %d)", i, getAcquireFence());
+        }
+    }
+    return groupIndex;
+}
+
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+android::String8
+AppImageStreamBuffer::
+toString() const
+{
+    android::String8 os;
+
+    os += android::String8::format("%#" PRIx64 "(%s)", getStreamId(), getName());
+
+    os += android::String8::format(" bufferId:%02" PRIu64 "", getBufferId());
+
+    if  (auto s = getStatus()) {
+        os += android::String8::format(" status:%#x", s);
+    }
+
+    return os;
+}
+
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+AppErrorImageStreamBuffer::StreamBufferT*
+AppErrorImageStreamBuffer::
+Allocator::
+operator()(MUINT64 bufferId, IStreamInfoT* pStreamInfo, MINT dupReleaseFence)
+{
+    return new AppErrorImageStreamBuffer(
+        bufferId,
+        pStreamInfo,
+        dupReleaseFence
+    );
+}
+
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+AppErrorImageStreamBuffer::
+AppErrorImageStreamBuffer(
+    MUINT64 bufferId,
+    sp<IStreamInfoT> pStreamInfo,
+    MINT dupReleaseFence
+)
+    : AppImageStreamBuffer(bufferId, pStreamInfo, nullptr, nullptr)
+    , mReleaseFence(NSCam::Utils::Sync::IFence::create(dupReleaseFence))
+{
+    markStatus(STREAM_BUFFER_STATUS::ERROR);
+}
+
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+MINT
+AppErrorImageStreamBuffer::
+getAcquireFence()   const
+{
+    return -1;
+}
+
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+MVOID
+AppErrorImageStreamBuffer::
+setAcquireFence(MINT fence)
+{
+    MY_LOGE("AppErrorImageStreamBuffer::setAcquireFence - not supported, fence:%d", fence);
+}
+
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+MINT
+AppErrorImageStreamBuffer::
+getReleaseFence()   const
+{
+    auto const dupReleaseFence = mReleaseFence->dup();
+    MY_LOGD_IF(0 && -1!=dupReleaseFence, "AppErrorImageStreamBuffer::getReleaseFence - fd:%d", dupReleaseFence);
+    return dupReleaseFence;
+}
+
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+MVOID
+AppErrorImageStreamBuffer::
+setReleaseFence(MINT fence)
+{
+    MY_LOGE("AppErrorImageStreamBuffer::setReleaseFence - not supported, fence:%d", fence);
+}
+
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+AppMetaStreamBuffer::
+Allocator::
+Allocator(
+    IStreamInfoT* pStreamInfo
+)
+    : mpStreamInfo(pStreamInfo)
+{
+}
+
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+AppMetaStreamBuffer::StreamBufferT*
+AppMetaStreamBuffer::
+Allocator::
+operator()()
+{
+    return new StreamBufferT(
+        mpStreamInfo
+    );
+}
+
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+AppMetaStreamBuffer::StreamBufferT*
+AppMetaStreamBuffer::
+Allocator::
+operator()(NSCam::IMetadata const& metadata)
+{
+    return new StreamBufferT(
+        mpStreamInfo, metadata
+    );
+}
+
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+AppMetaStreamBuffer::
+AppMetaStreamBuffer(
+    sp<IStreamInfoT> pStreamInfo,
+    IUsersManager* pUsersManager
+)
+    : TStreamBufferT(pStreamInfo, mMetadata, pUsersManager)
+    , mMetadata()
+    , mRepeating(MFALSE)
+    //
+{
+}
+
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+AppMetaStreamBuffer::
+AppMetaStreamBuffer(
+    sp<IStreamInfoT> pStreamInfo,
+    NSCam::IMetadata const& metadata,
+    IUsersManager* pUsersManager
+)
+    : TStreamBufferT(pStreamInfo, mMetadata, pUsersManager)
+    , mMetadata(metadata)
+    , mRepeating(MFALSE)
+    //
+{
+}
+
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+MVOID
+AppMetaStreamBuffer::
+setRepeating(MBOOL const repeating)
+{
+    android::Mutex::Autolock _l(mBufMutex);
+    mRepeating = repeating;
+}
+
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+MBOOL
+AppMetaStreamBuffer::
+isRepeating() const
+{
+    android::Mutex::Autolock _l(mBufMutex);
+    return mRepeating;
+}
+
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+android::String8
+AppMetaStreamBuffer::
+toString() const
+{
+    android::String8 os;
+
+    os += android::String8::format("%#" PRIx64 "(%s)", getStreamId(), getName());
+
+    if (mBufMutex.timedLock(10000000 /* 10ms */) == android::OK) {
+        os += android::String8::format(" #tags:%u", mMetadata.count());
+        mBufMutex.unlock();
+    }
+
+    if  (isRepeating()) {
+        os += " REPEAT";
+    }
+
+    if  (auto s = getStatus()) {
+        os += android::String8::format(" status:%#x", s);
+    }
+
+    return os;
+}
+
+};      // namespace Utils
+};      // namespace core
+};      // namespace mcam

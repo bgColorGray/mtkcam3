@@ -1,0 +1,11 @@
+WHAT IT DOES?
+=============
+Custom camera provider HAL implementation.
+
+HOW IT WAS BUILT?
+==================
+libmtkcam_hal_custom-provider.so
+
+HOW TO USE IT?
+==============
+Provide related api for custom camera provider HAL.

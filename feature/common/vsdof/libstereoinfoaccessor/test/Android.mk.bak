@@ -1,0 +1,19 @@
+LOCAL_PATH:= $(call my-dir)
+
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := test.cpp
+
+LOCAL_C_INCLUDES +=                 \
+    $(LOCAL_PATH)/../meta/          \
+    $(LOCAL_PATH)/../meta/data/     \
+    $(LOCAL_PATH)/../utils/         \
+    $(LOCAL_PATH)/../xmp-sdk/public/include                \
+    $(LOCAL_PATH)/../xmp-sdk/public/include/client-glue    \
+
+LOCAL_CFLAGS += -DHAVE_MEMMOVE -DUNIX_ENV -DSTDC -fexceptions -std=c99
+
+LOCAL_SHARED_LIBRARIES := libstereoinfoaccessor libcutils
+
+LOCAL_MODULE := accessor_test
+include $(MTKCAM_EXECUTABLE)

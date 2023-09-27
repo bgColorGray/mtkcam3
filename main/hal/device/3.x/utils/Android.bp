@@ -1,0 +1,10 @@
+cc_library_headers {
+    name: "libmtkcam_device3_utils_headers",
+    proprietary: true,
+    vendor: true,
+    owner: "mtk",
+
+    export_include_dirs: [
+        "include",
+    ],
+}

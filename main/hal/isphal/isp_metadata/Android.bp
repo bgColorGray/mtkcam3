@@ -1,0 +1,17 @@
+cc_library_shared {
+    srcs: ["mtkisp_metadata.cpp"],
+    name: "libmtkisp_metadata",
+    proprietary: true,
+    owner: "mtk",
+    shared_libs: [
+        "libui",
+        "liblog",
+        "libutils",
+    ],
+    export_include_dirs: ["./include"],
+
+}
+
+optional_subdirs = [
+    "*",
+]
